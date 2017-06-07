@@ -31,17 +31,18 @@
 
 main:
 
-li $t0, 0    #contador
-li $t1,1 #auxiliar
-li $t8,0 #auxiliar
-lw $a3, NUM #loop externo (não esquecer de multiplicar por 4 o NUM,$a3)
-li $t2, 0 #tamanho de cada linha
-li $a2, -4
 
   addiu $sp, $sp, -4
   sw    $ra, 0($sp)
   	#colocar seu codigo
 	jal dig_1
+	move $v1,$s0
+	jal dig_2
+	move $v1,$s1
+	
+	
+	
+	
 	lw    $ra, 0($sp)
 	addiu $sp, $sp, 4
 	li	  $v0, 10
@@ -50,52 +51,119 @@ li $a2, -4
 
 dig_1:
 
+#inicialização de componentes para esta função
+li $t0, 0    #contador
+li $t1,1 #auxiliar
+li $t2, 0 #tamanho de cada linha
+li $t3, 0 #somador
+li $t5,0 #auxiliar
+li $t6,10 #para o caulculo do somador
+lw $t7, NUM #POS
+li $t8, -4
+li $t9,11 #para o cálculo do resultado
+# fim da inicialização
 
+  
   addiu $sp, $sp, -4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
-	sw    $ra, 0($sp)
+  sw    $ra, 0($sp)
 		
-	li $t9,10 #para o caulculo do somador
-  	li $a1,11 #para o cálculo do resultado
-	li $t3, 0 #somador
-	mul $s0, $a3, 4 #define o tamanho do loop externo
-loopExterno:
-	addi $t2,$t2, 44 #linha interna
-	addi $a2, $a2, 4 #j++
-	beq $a2,$s0, resultado
+	
+	mul $t0, $t7, 44 #define qual linha de cpf vai ser verificada
+	sub $t0, $t0, 44 #tem q diminuir 44 se não sempre vai ficar na próxima linha, considerando o vetor começando em UM
+	addi $t2,$t0, 32 #posição final da linha do CPF porque só vai até o nono dígito no dig_1
 
 loop: 
 	lw $t4, CPF($t0) #carrega o valor do CPF no registrador
-	sub $t5, $t9, $t0 #10-i  #t5 é uma variavel auxiliar de results
-	mul $s1, $t4, $t5 #CPF[pos][i]*10-i
-	add $t3, $t3, $s1 #somador total
+	sub $t5, $t6, $t0 #10-i  #t5 é uma variavel auxiliar de resultados
+	mul $t5, $t4, $t5 #CPF[pos][i]*10-i
+	add $t3, $t3, $t5 #somador total
 	
 	addi $t0, $t0, 4 #i++
 	bne $t0, $t2, loop #se não é o fim do loop continua
-	beq $t0,$t2, loopExterno #se chegar no fim do i vai pro loop externo
-	
+
 resultado:
 	
-	rem $t5, $t3, 11 #resultado
+rem $t5, $t3, 11 #resultado
 
-verificacaoResultado:
 beqz $t5, retornaZero
 beq $t5, $t1, retornaZero
 
-sub $v0, $a1, $t5 #return 11-resultado;
 
-retornaZero:
-li $v0, 0
-
-#v0 TEM O RESULTADO!!!!!!
+sub $v1, $t9, $t5 #return 11-resultado;
 
 lw    $ra, 0($sp)
 addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
  jr    $ra
 
+retornaZero:
+li $v1, 0
+
+
+
+lw    $ra, 0($sp)
+addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
+ jr    $ra
+
+
+
 dig_2:
   addiu $sp, $sp, -4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
 	sw    $ra, 0($sp)
-	# Colocar aqui o seu codigo!
+	
+#inicialização de componentes para esta função
+li $t0, 0    #contador
+li $t1,1 #auxiliar
+li $t2, 0 #tamanho de cada linha
+li $t3, 0 #somador inicializado com 0
+li $t4,0 #inicializar
+li $t5,0 #auxiliar(resultado)
+li $t6,11 #para o caulculo do somador
+lw $t7, NUM #POS
+li $t8, -4
+li $t9,0 #auxiliarde resultados valor
+# fim da inicialização
+
+	mul $t0, $t7, 44 #define qual linha de cpf vai ser verificada POS
+	sub $t0, $t0, 44 #tem q diminuir 44 se não sempre vai ficar na próxima linha, considerando o vetor começando em UM
+	addi $t2,$t0, 36 #posição final da linha do CPF porque só vai até o décimo dígito no dig_1
+
+loop2: 
+	lw $t4, CPF($t0) #carrega o valor do CPF no registrador
+	sub $t5, $t6, $t0 #11-i  #t5 é uma variavel auxiliar de resultados
+	mul $t5, $t4, $t5 #CPF[pos][i]*11-i
+	add $t3, $t3, $t5 #somador total
+	
+	addi $t0, $t0, 4 #i++
+	bne $t0, $t2, loop2 #se não é o fim do loop continua no loop
+	
+calculoValor:
+
+	div $t9, $t3, $t6 #somador/11
+	mul $t9, $t9, $t6 #valor=(somador/11)*11; 
+	
+calculoResultado:
+	sub $t5, $t3,$t9 #resultado=somador-valor; 
+
+verificarResultado:
+
+beqz $t5, retornaZero2
+beq $t5, $t1, retornaZero2
+
+sub $v1, $t6, $t5 #return 11-resultado;
+
+lw    $ra, 0($sp)
+addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
+ jr    $ra
+
+retornaZero2:
+li $v1, 0
+
+
+
+
+
+
+
 	lw    $ra, 0($sp)
 	addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
   jr    $ra
