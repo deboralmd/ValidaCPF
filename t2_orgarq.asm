@@ -24,7 +24,7 @@
   SIZE:       .word 11
 	ponto:      .asciiz "."
 	traco:      .asciiz "-"
-	nova_linha: .asciiz "\n"
+	novaLinha: .asciiz "\n"
 	
 .text                   
 .globl  main
@@ -39,6 +39,7 @@ main:
 	move $v1,$s0
 	jal dig_2
 	move $v1,$s1
+	jal imprime_cpf
 	
 	
 	
@@ -158,20 +159,78 @@ addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registrad
 retornaZero2:
 li $v1, 0
 
-
-
-
-
-
-
 	lw    $ra, 0($sp)
 	addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
   jr    $ra
 
-imprime_cpf:
+
+
+
+
+
+
+
+imprime_cpf:  #fazendo para uma linha primeiro depois vou fazer pro resto
   addiu $sp, $sp, -4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
 	sw    $ra, 0($sp)
-	# Colocar aqui o seu codigo!
+	
+#inicialização de variáveis
+li $t0, 0 #int i = 0
+lw $t1, NUM #POS
+li $t2,0
+li $t3, 0
+li $t4, 0
+li $t5, 0
+li $t6,0 #começo do i
+li $t8, 0
+
+mul $t0, $t1, 44 #define o final de todas as linhas
+
+loopExterno:	
+addi $t2,$t2, 44 #posição final da linha do CPF (fim da linha)
+
+#arruma os valores para o if da linha
+addi $t4, $t6, 8 #3 posicao
+addi $t5, $t6, 20 #6 posicao
+addi $t8, $t6, 32 #9 posição
+		
+loop3:
+
+lw $t3, CPF($t6)
+li $v0,1
+move $a0, $t3
+syscall
+
+beq $t6, $t4, colocarPonto
+beq $t6, $t5, colocarPonto
+beq $t6, $t8, colocarTraco
+
+deVolta:
+addi $t6, $t6, 4 #i++
+bne $t6, $t2, loop3
+beq $t6, $t2, fimLoop #fim do loop interno vai pra próxima linha
+
+colocarPonto:
+la $a0, ponto
+li $v0, 4
+syscall
+j deVolta
+
+colocarTraco:
+la $a0, traco
+li $v0, 4
+syscall
+j deVolta
+
+fimLoop:
+la $a0, novaLinha
+li $v0, 4
+syscall
+bne $t6, $t0, loopExterno
+
+
+final:
+
 	lw    $ra, 0($sp)
 	addiu $sp, $sp, 4 # Atualizar o tamanho da pilha de acordo com os seus registradores!
   jr    $ra
